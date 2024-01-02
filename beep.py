@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, Scale, Entry, IntVar, Listbox
+from tkinter import messagebox, Scale, Entry, Listbox
 import pyaudio
 import audioop
 import winsound
@@ -21,7 +21,7 @@ class AudioMonitor:
         self.running = False
         self.audio = pyaudio.PyAudio()
         self.average_volume = 0
-        self.threshold_value = IntVar()
+        self.threshold = 20000  # Default threshold
         self.threshold_log = []
 
         # UI Elements
@@ -34,14 +34,14 @@ class AudioMonitor:
         self.status_label = tk.Label(root, text="Status: Not running")
         self.status_label.pack()
 
-        self.threshold_slider = Scale(root, from_=0, to=30000, orient=tk.HORIZONTAL, label="Volume Threshold (Slider)", variable=self.threshold_value)
-        self.threshold_slider.set(20000)  # Default value
+        self.threshold_slider = Scale(root, from_=0, to=30000, orient=tk.HORIZONTAL, label="Volume Threshold (Slider)", command=self.update_threshold_from_slider)
+        self.threshold_slider.set(self.threshold)
         self.threshold_slider.pack()
 
-        self.threshold_entry = Entry(root, textvariable=self.threshold_value)
+        self.threshold_entry = Entry(root)
+        self.threshold_entry.insert(0, str(self.threshold))
+        self.threshold_entry.bind("<Return>", self.update_threshold_from_entry)
         self.threshold_entry.pack()
-
-        self.threshold_value.trace("w", lambda name, index, mode, sv=self.threshold_value: self.update_threshold())
 
         self.volume_label = tk.Label(root, text="Average Speaking Volume: 0")
         self.volume_label.pack()
@@ -54,12 +54,17 @@ class AudioMonitor:
         if self.running:
             self.root.after(1000, self.update_volume_label)
 
-    def update_threshold(self):
+    def update_threshold_from_slider(self, val):
+        self.threshold = int(val)
+        self.threshold_entry.delete(0, tk.END)
+        self.threshold_entry.insert(0, str(self.threshold))
+
+    def update_threshold_from_entry(self, event):
         try:
-            new_threshold = int(self.threshold_entry.get())
-            self.threshold_slider.set(new_threshold)
+            self.threshold = int(self.threshold_entry.get())
+            self.threshold_slider.set(self.threshold)
         except ValueError:
-            pass  # Ignore invalid inputs
+            messagebox.showerror("Error", "Please enter a valid integer for the threshold.")
 
     def update_log_listbox(self):
         self.log_listbox.delete(0, tk.END)
@@ -95,14 +100,12 @@ class AudioMonitor:
                 if DISPLAY_VOLUME:
                     print("Volume:", rms)
 
-                threshold = self.threshold_slider.get()
-                if rms > threshold:
-                    difference = rms - threshold
-                    percent = (difference / threshold) * 100
+                if rms > self.threshold:
+                    difference = rms - self.threshold
+                    percent = (difference / self.threshold) * 100
                     timestamp = time.strftime("%H:%M:%S")
-                    log_entry = f"{timestamp} - {round(percent, 2)}%"
+                    log_entry = f"{timestamp} - Exceeded by {round(percent, 3)}%"
                     self.threshold_log.append(log_entry)
-                    # Keep only the last 5 entries
                     self.threshold_log = self.threshold_log[-5:]
                     self.root.after(0, self.update_log_listbox)
 

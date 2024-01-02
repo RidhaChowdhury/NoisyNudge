@@ -1,9 +1,10 @@
 import tkinter as tk
-from tkinter import messagebox, Scale, Entry, IntVar
+from tkinter import messagebox, Scale, Entry, IntVar, Listbox
 import pyaudio
 import audioop
 import winsound
 import threading
+import time
 
 # Constants
 FORMAT = pyaudio.paInt16
@@ -21,6 +22,7 @@ class AudioMonitor:
         self.audio = pyaudio.PyAudio()
         self.average_volume = 0
         self.threshold_value = IntVar()
+        self.threshold_log = []
 
         # UI Elements
         self.start_button = tk.Button(root, text="Start Monitoring", command=self.start_monitoring)
@@ -44,6 +46,9 @@ class AudioMonitor:
         self.volume_label = tk.Label(root, text="Average Speaking Volume: 0")
         self.volume_label.pack()
 
+        self.log_listbox = Listbox(root, height=5)
+        self.log_listbox.pack()
+
     def update_volume_label(self):
         self.volume_label.config(text=f"Average Speaking Volume: {round(self.average_volume, 2)}")
         if self.running:
@@ -55,6 +60,11 @@ class AudioMonitor:
             self.threshold_slider.set(new_threshold)
         except ValueError:
             pass  # Ignore invalid inputs
+
+    def update_log_listbox(self):
+        self.log_listbox.delete(0, tk.END)
+        for log_entry in self.threshold_log:
+            self.log_listbox.insert(tk.END, log_entry)
 
     def start_monitoring(self):
         self.running = True
@@ -87,6 +97,15 @@ class AudioMonitor:
 
                 threshold = self.threshold_slider.get()
                 if rms > threshold:
+                    difference = rms - threshold
+                    percent = (difference / threshold) * 100
+                    timestamp = time.strftime("%H:%M:%S")
+                    log_entry = f"{timestamp} - {round(percent, 2)}%"
+                    self.threshold_log.append(log_entry)
+                    # Keep only the last 5 entries
+                    self.threshold_log = self.threshold_log[-5:]
+                    self.root.after(0, self.update_log_listbox)
+
                     winsound.Beep(1000, 250)
 
                 if rms > VOLUME_FLOOR:

@@ -1,9 +1,8 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, Scale, Entry, IntVar
 import pyaudio
 import audioop
 import winsound
-import time
 import threading
 
 # Constants
@@ -11,7 +10,6 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 CHUNK = 1024
-THRESHOLD = 20000
 VOLUME_FLOOR = 1000
 DISPLAY_VOLUME = False
 
@@ -22,6 +20,7 @@ class AudioMonitor:
         self.running = False
         self.audio = pyaudio.PyAudio()
         self.average_volume = 0
+        self.threshold_value = IntVar()
 
         # UI Elements
         self.start_button = tk.Button(root, text="Start Monitoring", command=self.start_monitoring)
@@ -33,13 +32,29 @@ class AudioMonitor:
         self.status_label = tk.Label(root, text="Status: Not running")
         self.status_label.pack()
 
+        self.threshold_slider = Scale(root, from_=0, to=30000, orient=tk.HORIZONTAL, label="Volume Threshold (Slider)", variable=self.threshold_value)
+        self.threshold_slider.set(20000)  # Default value
+        self.threshold_slider.pack()
+
+        self.threshold_entry = Entry(root, textvariable=self.threshold_value)
+        self.threshold_entry.pack()
+
+        self.threshold_value.trace("w", lambda name, index, mode, sv=self.threshold_value: self.update_threshold())
+
         self.volume_label = tk.Label(root, text="Average Speaking Volume: 0")
         self.volume_label.pack()
 
     def update_volume_label(self):
         self.volume_label.config(text=f"Average Speaking Volume: {round(self.average_volume, 2)}")
         if self.running:
-            self.root.after(1000, self.update_volume_label)  # Update label every second
+            self.root.after(1000, self.update_volume_label)
+
+    def update_threshold(self):
+        try:
+            new_threshold = int(self.threshold_entry.get())
+            self.threshold_slider.set(new_threshold)
+        except ValueError:
+            pass  # Ignore invalid inputs
 
     def start_monitoring(self):
         self.running = True
@@ -47,7 +62,7 @@ class AudioMonitor:
         self.stop_button.config(state=tk.NORMAL)
         self.status_label.config(text="Status: Running")
         threading.Thread(target=self.monitor).start()
-        self.update_volume_label()  # Start updating the volume label
+        self.update_volume_label()
 
     def stop_monitoring(self):
         self.running = False
@@ -70,7 +85,8 @@ class AudioMonitor:
                 if DISPLAY_VOLUME:
                     print("Volume:", rms)
 
-                if rms > THRESHOLD:
+                threshold = self.threshold_slider.get()
+                if rms > threshold:
                     winsound.Beep(1000, 250)
 
                 if rms > VOLUME_FLOOR:

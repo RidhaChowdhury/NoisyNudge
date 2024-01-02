@@ -120,10 +120,9 @@ class AudioMonitor:
             stream.close()
 
     def on_closing(self):
-        if messagebox.askokcancel("Quit", "Do you want to quit?"):
-            self.running = False
-            self.audio.terminate()
-            self.root.destroy()
+        self.running = False
+        self.audio.terminate()
+        self.root.destroy()
 
 if __name__ == "__main__":
     root = tk.Tk()

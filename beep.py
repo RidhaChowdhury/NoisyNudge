@@ -46,9 +46,8 @@ class AudioMonitor(ctk.CTk):
         self.volume_label = ctk.CTkLabel(self, text="Average Speaking Volume: 0")
         self.volume_label.pack()
 
-        self.log_listbox = tk.Listbox(self, height=5)
+        self.log_listbox = tk.Listbox(self, height=5, bg="#333333", fg="white")
         self.log_listbox.pack(pady=10)
-
 
     def update_volume_label(self):
         self.volume_label.configure(text=f"Average Speaking Volume: {round(self.average_volume, 2)}")

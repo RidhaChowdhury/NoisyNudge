@@ -24,29 +24,35 @@ class AudioMonitor(ctk.CTk):
         self.threshold = 20000  # Default threshold
         self.threshold_log = []
 
+        self.controls_frame = ctk.CTkFrame(self)
+        self.controls_frame.pack(side='left', fill='both', expand=True)
+
+        self.log_frame = ctk.CTkFrame(self)
+        self.log_frame.pack(side='right', fill='both', expand=True)
+
         # UI Elements
-        self.start_button = ctk.CTkButton(self, text="Start Monitoring", command=self.start_monitoring)
+        self.start_button = ctk.CTkButton(self.controls_frame, text="Start Monitoring", command=self.start_monitoring)
         self.start_button.pack()
 
-        self.stop_button = ctk.CTkButton(self, text="Stop Monitoring", command=self.stop_monitoring, state="disabled")
+        self.stop_button = ctk.CTkButton(self.controls_frame, text="Stop Monitoring", command=self.stop_monitoring, state="disabled")
         self.stop_button.pack()
 
-        self.status_label = ctk.CTkLabel(self, text="Status: Not running")
+        self.status_label = ctk.CTkLabel(self.controls_frame, text="Status: Not running")
         self.status_label.pack()
 
-        self.threshold_slider = ctk.CTkSlider(self, from_=0, to=30000, command=self.update_threshold_from_slider)
+        self.threshold_slider = ctk.CTkSlider(self.controls_frame, from_=0, to=30000, command=self.update_threshold_from_slider)
         self.threshold_slider.set(self.threshold)
         self.threshold_slider.pack()
 
-        self.threshold_entry = ctk.CTkEntry(self)
+        self.threshold_entry = ctk.CTkEntry(self.controls_frame)
         self.threshold_entry.insert(0, str(self.threshold))
         self.threshold_entry.bind("<Return>", self.update_threshold_from_entry)
         self.threshold_entry.pack()
 
-        self.volume_label = ctk.CTkLabel(self, text="Average Speaking Volume: 0")
+        self.volume_label = ctk.CTkLabel(self.controls_frame, text="Average Speaking Volume: 0")
         self.volume_label.pack()
 
-        self.log_listbox = tk.Listbox(self, height=5, bg="#333333", fg="white")
+        self.log_listbox = tk.Listbox(self.log_frame, height=5, bg="#333333", fg="white")
         self.log_listbox.pack(pady=10)
 
     def update_volume_label(self):
@@ -104,7 +110,7 @@ class AudioMonitor(ctk.CTk):
                     difference = rms - self.threshold
                     percent = (difference / self.threshold) * 100
                     timestamp = time.strftime("%H:%M:%S")
-                    log_entry = f"{timestamp} - Exceeded by {round(percent, 3)}%"
+                    log_entry = f"{timestamp} - {round(percent, 1)}%"
                     self.threshold_log.append(log_entry)
                     self.threshold_log = self.threshold_log[-5:]
                     self.after(0, self.update_log_listbox)

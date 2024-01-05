@@ -31,14 +31,8 @@ class AudioMonitor(ctk.CTk):
         self.log_frame.pack(side='right', fill='both', expand=True)
 
         # UI Elements
-        self.start_button = ctk.CTkButton(self.controls_frame, text="Start Monitoring", command=self.start_monitoring)
+        self.start_button = ctk.CTkButton(self.controls_frame, text="Start", command=self.start_monitoring)
         self.start_button.pack()
-
-        self.stop_button = ctk.CTkButton(self.controls_frame, text="Stop Monitoring", command=self.stop_monitoring, state="disabled")
-        self.stop_button.pack()
-
-        self.status_label = ctk.CTkLabel(self.controls_frame, text="Status: Not running")
-        self.status_label.pack()
 
         self.threshold_slider = ctk.CTkSlider(self.controls_frame, from_=0, to=30000, command=self.update_threshold_from_slider)
         self.threshold_slider.set(self.threshold)
@@ -52,8 +46,8 @@ class AudioMonitor(ctk.CTk):
         self.volume_label = ctk.CTkLabel(self.controls_frame, text="Average Speaking Volume: 0")
         self.volume_label.pack()
 
-        self.log_listbox = tk.Listbox(self.log_frame, height=5, bg="#333333", fg="white")
-        self.log_listbox.pack(pady=10)
+        self.log_listbox = tk.Listbox(self.log_frame, height=5, bg="#333333")
+        self.log_listbox.pack(pady=10, padx=10, fill="both", expand=True)
 
     def update_volume_label(self):
         self.volume_label.configure(text=f"Average Speaking Volume: {round(self.average_volume, 2)}")
@@ -79,17 +73,13 @@ class AudioMonitor(ctk.CTk):
 
     def start_monitoring(self):
         self.running = True
-        self.start_button.configure(state="disabled")
-        self.stop_button.configure(state="normal")
-        self.status_label.configure(text="Status: Running")
+        self.start_button.configure(state="disabled", text = "Stop", text_color = "white")
         threading.Thread(target=self.monitor).start()
         self.update_volume_label()
 
     def stop_monitoring(self):
         self.running = False
         self.start_button.configure(state="normal")
-        self.stop_button.configure(state="disabled")
-        self.status_label.configure(text="Status: Not running")
 
     def monitor(self):
         device_index = 3

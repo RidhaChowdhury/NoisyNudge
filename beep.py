@@ -24,15 +24,21 @@ class AudioMonitor(ctk.CTk):
         self.threshold = 20000  # Default threshold
         self.threshold_log = []
 
-        self.controls_frame = ctk.CTkFrame(self)
+        self.background_frame = ctk.CTkFrame(self, bg_color="#333333")
+        self.background_frame.pack(fill="both", expand=True)
+
+        self.app_frame = ctk.CTkFrame(self.background_frame, bg_color="#333333")
+        self.app_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        self.controls_frame = ctk.CTkFrame(self.app_frame)
         self.controls_frame.pack(side='left', fill='both', expand=True)
 
-        self.log_frame = ctk.CTkFrame(self)
+        self.log_frame = ctk.CTkFrame(self.app_frame)
         self.log_frame.pack(side='right', fill='both', expand=True)
 
         # UI Elements
         self.start_button = ctk.CTkButton(self.controls_frame, text="Start", command=self.start_monitoring)
-        self.start_button.pack()
+        self.start_button.pack(pady=5)
 
         self.threshold_slider = ctk.CTkSlider(self.controls_frame, from_=0, to=30000, command=self.update_threshold_from_slider)
         self.threshold_slider.set(self.threshold)
